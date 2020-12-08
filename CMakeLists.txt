@@ -3,4 +3,4 @@ project(Regex_parser)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(Regex_parser main.cpp tokenizer.hpp ast.hpp)
+add_executable(Regex_parser main.cpp tokenizer.hpp ast.hpp finite_automata.hpp)
