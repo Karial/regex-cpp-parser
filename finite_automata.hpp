@@ -1,5 +1,6 @@
 #ifndef REGEX_PARSER_FINITE_AUTOMATA_HPP
 #define REGEX_PARSER_FINITE_AUTOMATA_HPP
+#include <algorithm>
 #include <queue>
 #include <string>
 #include <unordered_map>
@@ -11,22 +12,35 @@
 
 class FiniteAutomata {
 public:
-  bool Check(const std::string &str) {
-    std::vector<Node *> currentNodes = {begin};
+  bool Check(const std::string &str) const {
+    if (!isDeterministic) {
+      std::vector<Node *> currentNodes = {begin};
 
-    for (const auto &c : str) {
-      currentNodes = Node::GetSurrounding(currentNodes);
-      currentNodes = Node::Move(currentNodes, c);
-    }
-
-    currentNodes = Node::GetSurrounding(currentNodes);
-    for (const auto &node : currentNodes) {
-      if (node->isFinal) {
-        return true;
+      for (const auto &c : str) {
+        currentNodes = Node::GetSurrounding(currentNodes);
+        currentNodes = Node::Move(currentNodes, c);
       }
-    }
 
-    return false;
+      currentNodes = Node::GetSurrounding(currentNodes);
+      for (const auto &node : currentNodes) {
+        if (node->isFinal) {
+          return true;
+        }
+      }
+
+      return false;
+    } else {
+      Node *currentNode = begin;
+
+      for (const auto &c : str) {
+        if (currentNode->next.find(c) == std::end(currentNode->next)) {
+          return false;
+        }
+        currentNode = currentNode->next[c][0];
+      }
+
+      return currentNode->isFinal;
+    }
   }
 
   friend FiniteAutomata CreateNFAFromAST(ASTNode *ast);
@@ -74,6 +88,7 @@ private:
 
   Node *begin{};
   Node *end{};
+  bool isDeterministic{false};
 };
 
 FiniteAutomata CreateNFAFromAST(ASTNode *ast) {
@@ -169,7 +184,18 @@ FiniteAutomata CreateDFAFromNFA(const FiniteAutomata &nfa) {
     }
   }
 
+  result.isDeterministic = true;
   return result;
+}
+
+FiniteAutomata CreateNFAFromStream(std::istream *in) {
+  auto ast = CreateASTFromStream(in);
+  return CreateNFAFromAST(ast.get());
+}
+
+FiniteAutomata CreateDFAFromStream(std::istream *in) {
+  auto nfa = CreateNFAFromStream(in);
+  return CreateDFAFromNFA(nfa);
 }
 
 #endif

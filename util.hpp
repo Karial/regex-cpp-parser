@@ -21,7 +21,7 @@ void Benchmark(const Function &function, const std::string &functionName) {
   function();
   auto stop = high_resolution_clock::now();
   std::cout << "Execution time of " + functionName + " "
-            << duration_cast<microseconds>(stop - start).count() << " mcs\n";
+            << duration_cast<milliseconds>(stop - start).count() << " mcs\n";
 }
 
 #endif // REGEX_PARSER_UTIL_HPP

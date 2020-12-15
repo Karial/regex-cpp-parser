@@ -138,4 +138,12 @@ TEST(TIMES, TEST3) {
         dfa.Check(test);
       },
       "DFA with regex (a+|b*)");
+  Benchmark(
+      []() {
+        std::string test;
+        for (size_t i = 0; i < 200000; ++i) {
+          test += "a";
+        }
+      },
+      "Simple loop");
 }

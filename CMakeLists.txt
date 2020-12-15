@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.14)
 project(Regex_parser)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
 add_executable(Regex_parser test.cpp tokenizer.hpp ast.hpp finite_automata.hpp util.hpp)
 add_subdirectory(googletest-master)
