@@ -30,6 +30,11 @@ class OrToken {
   bool operator==(const OrToken &rhs) const { return true; }
 };
 
+class SpecialSymbolToken {
+ public:
+  bool operator==(const SpecialSymbolToken &) const { return true; }
+};
+
 class Empty {
  public:
   bool operator==(const Empty &) const { return true; }
@@ -51,21 +56,33 @@ class Tokenizer {
       return;
     }
     switch (stream_->peek()) {
-      case '+':stream_->get();
+      case '+': {
+        stream_->get();
         currentToken_ = PlusToken{};
         break;
-      case '*':stream_->get();
+      }
+      case '*': {
+        stream_->get();
         currentToken_ = StarToken{};
         break;
-      case '|':stream_->get();
+      }
+      case '|': {
+        stream_->get();
         currentToken_ = OrToken{};
         break;
-      case '(':stream_->get();
+      }
+      case '(': {
+        stream_->get();
         currentToken_ = BracketToken::OPEN;
         break;
-      case ')':stream_->get();
+      }
+      case ')': {
+        stream_->get();
         currentToken_ = BracketToken::CLOSE;
         break;
+      }
+      case '\\': {
+      }
       default:currentToken_ = SymbolToken{static_cast<char>(stream_->get())};
         break;
     }
