@@ -2,6 +2,7 @@
 #include <sstream>
 
 #include "finite_automata.hpp"
+#include "character_classes.hpp"
 
 void Check(const FiniteAutomata &automata, const std::string &text) {
   if (automata.Check(text)) {

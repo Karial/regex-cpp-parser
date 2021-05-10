@@ -2,34 +2,40 @@
 #define REGEX_PARSER_AST_HPP
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "tokenizer.hpp"
 
 class ASTNode {
-public:
+ public:
   virtual std::string Output() const = 0;
 };
 
 class SymbolNode : public ASTNode {
-public:
-  explicit SymbolNode(char sym) : sym(sym) {}
+ public:
+  explicit SymbolNode(std::vector<char> syms) : syms_(std::move(syms)) {}
 
   std::string Output() const override {
     std::string result = "Symbol node(";
-    result += sym;
+    for (size_t i = 0; i < syms_.size(); ++i) {
+      result += syms_[i];
+      if (i != syms_.size() - 1) {
+        result += ',';
+      }
+    }
     result += ")";
     return result;
   }
 
-  char GetSym() const { return sym; }
+  std::vector<char> GetSyms() const { return syms_; }
 
-private:
-  char sym;
+ private:
+  std::vector<char> syms_;
 };
 
 class OrNode : public ASTNode {
-public:
+ public:
   OrNode(std::unique_ptr<ASTNode> &&lhs, std::unique_ptr<ASTNode> &&rhs)
       : lhs_(std::move(lhs)), rhs_(std::move(rhs)) {}
   std::string Output() const override {
@@ -41,12 +47,12 @@ public:
   const std::unique_ptr<ASTNode> &GetLhs() const { return lhs_; }
   const std::unique_ptr<ASTNode> &GetRhs() const { return rhs_; }
 
-private:
+ private:
   std::unique_ptr<ASTNode> lhs_{}, rhs_{};
 };
 
 class ConcatNode : public ASTNode {
-public:
+ public:
   ConcatNode(std::unique_ptr<ASTNode> &&lhs, std::unique_ptr<ASTNode> &&rhs)
       : lhs_(std::move(lhs)), rhs_(std::move(rhs)) {}
   std::string Output() const override {
@@ -58,12 +64,12 @@ public:
   const std::unique_ptr<ASTNode> &GetLhs() const { return lhs_; }
   const std::unique_ptr<ASTNode> &GetRhs() const { return rhs_; }
 
-private:
+ private:
   std::unique_ptr<ASTNode> lhs_, rhs_;
 };
 
 class PlusNode : public ASTNode {
-public:
+ public:
   explicit PlusNode(std::unique_ptr<ASTNode> &&value)
       : value_(std::move(value)) {}
   std::string Output() const override {
@@ -73,12 +79,12 @@ public:
 
   const std::unique_ptr<ASTNode> &GetValue() const { return value_; }
 
-private:
+ private:
   std::unique_ptr<ASTNode> value_;
 };
 
 class StarNode : public ASTNode {
-public:
+ public:
   explicit StarNode(std::unique_ptr<ASTNode> &&value)
       : value_(std::move(value)) {}
   std::string Output() const override {
@@ -88,17 +94,17 @@ public:
 
   const std::unique_ptr<ASTNode> &GetValue() const { return value_; }
 
-private:
+ private:
   std::unique_ptr<ASTNode> value_;
 };
 
 std::unique_ptr<ASTNode> CreateASTFromTokenizer(Tokenizer &tokenizer) {
   Token token = tokenizer.GetToken();
   std::vector<std::vector<std::unique_ptr<ASTNode>>> tokensSequences(1);
-  while (token.index() != 5) {
+  while (!std::holds_alternative<Empty>(token)) {
     if (std::holds_alternative<SymbolToken>(token)) {
       tokensSequences.back().emplace_back(
-          std::make_unique<SymbolNode>(std::get<SymbolToken>(token).sym));
+          std::make_unique<SymbolNode>(std::get<SymbolToken>(token).syms));
     } else if (std::holds_alternative<PlusToken>(token)) {
       auto lastToken = std::move(tokensSequences.back().back());
       tokensSequences.back().back() =

@@ -96,7 +96,9 @@ FiniteAutomata CreateNFAFromAST(ASTNode *ast) {
   if (auto b = dynamic_cast<SymbolNode *>(ast)) {
     result.begin = new FiniteAutomata::Node;
     result.end = new FiniteAutomata::Node{true};
-    result.begin->next[b->GetSym()] = {result.end};
+    for (const auto &c : b->GetSyms()) {
+      result.begin->next[c] = {result.end};
+    }
   }
   if (auto b = dynamic_cast<OrNode *>(ast)) {
     result.begin = new FiniteAutomata::Node;

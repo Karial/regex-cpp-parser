@@ -3,16 +3,19 @@
 
 #include <istream>
 #include <memory>
+#include <utility>
 #include <variant>
+
+#include "character_classes.hpp"
 
 class SymbolToken {
  public:
   SymbolToken() = default;
-  explicit SymbolToken(char sym) : sym(sym) {}
-  bool operator==(const SymbolToken &rhs) const { return sym == rhs.sym; }
+  explicit SymbolToken(std::vector<char> syms) : syms(std::move(syms)) {}
+  bool operator==(const SymbolToken &rhs) const { return syms == rhs.syms; }
 
  public:
-  char sym{};
+  std::vector<char> syms{};
 };
 
 class PlusToken {
@@ -28,11 +31,6 @@ class StarToken {
 class OrToken {
  public:
   bool operator==(const OrToken &rhs) const { return true; }
-};
-
-class SpecialSymbolToken {
- public:
-  bool operator==(const SpecialSymbolToken &) const { return true; }
 };
 
 class Empty {
@@ -82,9 +80,42 @@ class Tokenizer {
         break;
       }
       case '\\': {
-      }
-      default:currentToken_ = SymbolToken{static_cast<char>(stream_->get())};
+        stream_->get();
+        switch (char c = static_cast<char>(stream_->get()); c) {
+          case 'd': {
+            currentToken_ = SymbolToken(DigitClass);
+            break;
+          }
+          case 'D': {
+            currentToken_ = SymbolToken(NonDigitClass);
+            break;
+          }
+          case 'w': {
+            currentToken_ = SymbolToken(WordClass);
+            break;
+          }
+          case 'W': {
+            currentToken_ = SymbolToken(NonWordClass);
+            break;
+          }
+          case 's': {
+            currentToken_ = SymbolToken(SpaceClass);
+            break;
+          }
+          case 'S': {
+            currentToken_ = SymbolToken(NonSpaceClass);
+            break;
+          }
+          default: {
+            currentToken_ = SymbolToken{{c}};
+          }
+        }
         break;
+      }
+      default: {
+        currentToken_ = SymbolToken{{static_cast<char>(stream_->get())}};
+        break;
+      }
     }
   }
 
