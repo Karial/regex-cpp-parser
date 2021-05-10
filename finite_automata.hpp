@@ -11,7 +11,7 @@
 #include "util.hpp"
 
 class FiniteAutomata {
-public:
+ public:
   bool Check(const std::string &str) const {
     if (!isDeterministic) {
       std::vector<Node *> currentNodes = {begin};
@@ -46,7 +46,7 @@ public:
   friend FiniteAutomata CreateNFAFromAST(ASTNode *ast);
   friend FiniteAutomata CreateDFAFromNFA(const FiniteAutomata &nfa);
 
-private:
+ private:
   struct Node {
     bool isFinal{false};
     std::unordered_map<char, std::vector<Node *>> next;

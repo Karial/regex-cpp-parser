@@ -4,7 +4,8 @@
 #include <chrono>
 #include <iostream>
 
-template <typename Container> struct SetHash {
+template<typename Container>
+struct SetHash {
   size_t operator()(const Container &container) const {
     size_t result = 0;
     for (const auto &i : container) {
@@ -14,7 +15,7 @@ template <typename Container> struct SetHash {
   }
 };
 
-template <typename Function>
+template<typename Function>
 void Benchmark(const Function &function, const std::string &functionName) {
   using namespace std::chrono;
   auto start = high_resolution_clock::now();
