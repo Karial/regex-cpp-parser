@@ -137,6 +137,16 @@ FiniteAutomata CreateNFAFromAST(ASTNode *ast) {
     result.begin->next[0].emplace_back(result.end);
     valueAutomata.end->isFinal = false;
   }
+  if (auto b = dynamic_cast<QuestionNode *>(ast)) {
+    auto valueAutomata = CreateNFAFromAST(b->GetValue().get());
+    result.begin = new FiniteAutomata::Node;
+    result.end = new FiniteAutomata::Node{true};
+    result.begin->next[0] = {valueAutomata.begin};
+    valueAutomata.end->next[0].emplace_back(result.end);
+    result.begin->next[0].emplace_back(result.end);
+    valueAutomata.end->isFinal = false;
+  }
+
   return result;
 }
 

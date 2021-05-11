@@ -38,6 +38,7 @@ class OrNode : public ASTNode {
  public:
   OrNode(std::unique_ptr<ASTNode> &&lhs, std::unique_ptr<ASTNode> &&rhs)
       : lhs_(std::move(lhs)), rhs_(std::move(rhs)) {}
+
   std::string Output() const override {
     std::string result =
         "OrNode(" + lhs_->Output() + ", " + rhs_->Output() + ")";
@@ -55,6 +56,7 @@ class ConcatNode : public ASTNode {
  public:
   ConcatNode(std::unique_ptr<ASTNode> &&lhs, std::unique_ptr<ASTNode> &&rhs)
       : lhs_(std::move(lhs)), rhs_(std::move(rhs)) {}
+
   std::string Output() const override {
     std::string result =
         "ConcatNode(" + lhs_->Output() + ", " + rhs_->Output() + ")";
@@ -72,6 +74,7 @@ class PlusNode : public ASTNode {
  public:
   explicit PlusNode(std::unique_ptr<ASTNode> &&value)
       : value_(std::move(value)) {}
+
   std::string Output() const override {
     std::string result = "PlusNode(" + value_->Output() + ")";
     return result;
@@ -87,8 +90,25 @@ class StarNode : public ASTNode {
  public:
   explicit StarNode(std::unique_ptr<ASTNode> &&value)
       : value_(std::move(value)) {}
+
   std::string Output() const override {
     std::string result = "StarNode(" + value_->Output() + ")";
+    return result;
+  }
+
+  const std::unique_ptr<ASTNode> &GetValue() const { return value_; }
+
+ private:
+  std::unique_ptr<ASTNode> value_;
+};
+
+class QuestionNode : public ASTNode {
+ public:
+  explicit QuestionNode(std::unique_ptr<ASTNode> &&value)
+      : value_(std::move(value)) {}
+
+  std::string Output() const override {
+    std::string result = "QuestionNode(" + value_->Output() + ")";
     return result;
   }
 
@@ -113,6 +133,10 @@ std::unique_ptr<ASTNode> CreateASTFromTokenizer(Tokenizer &tokenizer) {
       auto lastToken = std::move(tokensSequences.back().back());
       tokensSequences.back().back() =
           std::make_unique<StarNode>(std::move(lastToken));
+    } else if (std::holds_alternative<QuestionToken>(token)) {
+      auto lastToken = std::move(tokensSequences.back().back());
+      tokensSequences.back().back() =
+          std::make_unique<QuestionNode>(std::move(lastToken));
     } else if (std::holds_alternative<OrToken>(token)) {
       tokensSequences.emplace_back();
     } else if (std::holds_alternative<BracketToken>(token)) {

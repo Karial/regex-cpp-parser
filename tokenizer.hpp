@@ -20,17 +20,22 @@ class SymbolToken {
 
 class PlusToken {
  public:
-  bool operator==(const PlusToken &rhs) const { return true; }
+  bool operator==(const PlusToken &) const { return true; }
 };
 
 class StarToken {
  public:
-  bool operator==(const StarToken &rhs) const { return true; }
+  bool operator==(const StarToken &) const { return true; }
+};
+
+class QuestionToken {
+ public:
+  bool operator==(const QuestionToken &) { return true; }
 };
 
 class OrToken {
  public:
-  bool operator==(const OrToken &rhs) const { return true; }
+  bool operator==(const OrToken &) const { return true; }
 };
 
 class Empty {
@@ -40,7 +45,7 @@ class Empty {
 
 enum class BracketToken { OPEN, CLOSE };
 
-typedef std::variant<SymbolToken, PlusToken, StarToken, OrToken, BracketToken,
+typedef std::variant<SymbolToken, PlusToken, StarToken, OrToken, QuestionToken, BracketToken,
                      Empty>
     Token;
 
@@ -67,6 +72,11 @@ class Tokenizer {
       case '|': {
         stream_->get();
         currentToken_ = OrToken{};
+        break;
+      }
+      case '?': {
+        stream_->get();
+        currentToken_ = QuestionToken{};
         break;
       }
       case '(': {

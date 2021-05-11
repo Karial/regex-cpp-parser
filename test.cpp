@@ -83,6 +83,32 @@ TEST(BASIC_FUNCTIONALITY_TESTS, TEST5) {
   ASSERT_FALSE(dfa.Check("c"));
 }
 
+TEST(BASIC_FUNCTIONALITY_TESTS, TEST6) {
+  std::stringstream in("a?");
+  auto ast = CreateASTFromStream(&in);
+  auto nfa = CreateNFAFromAST(ast.get());
+  ASSERT_TRUE(nfa.Check(""));
+  ASSERT_TRUE(nfa.Check("a"));
+  ASSERT_FALSE(nfa.Check("aa"));
+  ASSERT_FALSE(nfa.Check("c"));
+  auto dfa = CreateDFAFromNFA(nfa);
+  ASSERT_TRUE(dfa.Check(""));
+  ASSERT_TRUE(dfa.Check("a"));
+  ASSERT_FALSE(dfa.Check("aa"));
+  ASSERT_FALSE(dfa.Check("c"));
+}
+
+TEST(BASIC_FUNCTIONALITY_TESTS, TEST7) {
+  std::stringstream in("\\?");
+  auto ast = CreateASTFromStream(&in);
+  auto nfa = CreateNFAFromAST(ast.get());
+  ASSERT_TRUE(nfa.Check("?"));
+  ASSERT_FALSE(nfa.Check("c"));
+  auto dfa = CreateDFAFromNFA(nfa);
+  ASSERT_TRUE(dfa.Check("?"));
+  ASSERT_FALSE(dfa.Check("c"));
+}
+
 TEST(CHARACTER_GROUPS, DIGITS) {
   std::stringstream in("\\d+");
   auto ast = CreateASTFromStream(&in);
@@ -229,7 +255,7 @@ TEST(CHARACTER_GROUPS, NON_SPACE_CHARACTERS) {
   ASSERT_FALSE(dfa.Check("\fdfgfd"));
 }
 
-TEST(TIMES, TEST1) {
+TEST(TIMES, DISABLED_TEST1) {
   std::stringstream in("(a+|b*)");
   auto result = CreateASTFromStream(&in);
   auto nfa = CreateNFAFromAST(result.get());
@@ -260,7 +286,7 @@ TEST(TIMES, TEST1) {
       "DFA with regex (a+|b*)");
 }
 
-TEST(TIMES, TEST2) {
+TEST(TIMES, DISABLED_TEST2) {
   std::stringstream in("((a*|b*|c*)d+e+)|(x*y+z*)");
   auto result = CreateASTFromStream(&in);
   auto nfa = CreateNFAFromAST(result.get());
@@ -291,7 +317,7 @@ TEST(TIMES, TEST2) {
       "DFA with regex (a+|b*)");
 }
 
-TEST(TIMES, TEST3) {
+TEST(TIMES, DISABLED_TEST3) {
   std::stringstream in("((((((((a*)+)+)*)+)*)*)+)+");
   auto result = CreateASTFromStream(&in);
   auto nfa = CreateNFAFromAST(result.get());
