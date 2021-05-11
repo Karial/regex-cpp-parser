@@ -277,7 +277,76 @@ TEST(CHARACTER_GROUPS, CUSTOM_GROUP2) {
   ASSERT_FALSE(dfa.Check("(a)"));
 }
 
-TEST(TIMES, DISABLED_TEST1) {
+TEST(CHARACTER_GROUPS, CUSTOM_GROUP3) {
+  std::stringstream in("[[]]");
+  auto ast = CreateASTFromStream(&in);
+  auto nfa = CreateNFAFromAST(ast.get());
+  ASSERT_TRUE(nfa.Check("[]"));
+  auto dfa = CreateDFAFromNFA(nfa);
+  ASSERT_TRUE(dfa.Check("[]"));
+}
+
+TEST(CHARACTER_GROUPS, CUSTOM_GROUP4) {
+  std::stringstream in("[\\d]");
+  auto ast = CreateASTFromStream(&in);
+  auto nfa = CreateNFAFromAST(ast.get());
+  for (char c = '0'; c < '9'; ++c) {
+    ASSERT_TRUE(nfa.Check({c}));
+  }
+  ASSERT_FALSE(nfa.Check("a"));
+  auto dfa = CreateDFAFromNFA(nfa);
+  for (char c = '0'; c < '9'; ++c) {
+    ASSERT_TRUE(dfa.Check({c}));
+  }
+  ASSERT_FALSE(dfa.Check("a"));
+}
+
+TEST(CHARACTER_GROUPS, RANGE1) {
+  std::stringstream in("[a-e]");
+  auto ast = CreateASTFromStream(&in);
+  auto nfa = CreateNFAFromAST(ast.get());
+  for (char c = 'a'; c <= 'e'; ++c) {
+    ASSERT_TRUE(nfa.Check({c}));
+  }
+  ASSERT_FALSE(nfa.Check({'f'}));
+  auto dfa = CreateDFAFromNFA(nfa);
+  for (char c = 'a'; c <= 'e'; ++c) {
+    ASSERT_TRUE(dfa.Check({c}));
+  }
+  ASSERT_FALSE(dfa.Check({'f'}));
+}
+
+TEST(CHARACTER_GROUPS, RANGE2) {
+  std::stringstream in("[0-9]");
+  auto ast = CreateASTFromStream(&in);
+  auto nfa = CreateNFAFromAST(ast.get());
+  for (char c = '0'; c <= '9'; ++c) {
+    ASSERT_TRUE(nfa.Check({c}));
+  }
+  ASSERT_FALSE(nfa.Check({'a'}));
+  auto dfa = CreateDFAFromNFA(nfa);
+  for (char c = '0'; c <= '9'; ++c) {
+    ASSERT_TRUE(dfa.Check({c}));
+  }
+  ASSERT_FALSE(dfa.Check({'a'}));
+}
+
+TEST(CHARACTER_GROUPS, RANGE3) {
+  std::stringstream in("[A-\\\\]");
+  auto ast = CreateASTFromStream(&in);
+  auto nfa = CreateNFAFromAST(ast.get());
+  for (char c = 'A'; c <= '\\'; ++c) {
+    ASSERT_TRUE(nfa.Check({c}));
+  }
+  ASSERT_FALSE(nfa.Check({']'}));
+  auto dfa = CreateDFAFromNFA(nfa);
+  for (char c = 'A'; c <= '\\'; ++c) {
+    ASSERT_TRUE(dfa.Check({c}));
+  }
+  ASSERT_FALSE(dfa.Check({']'}));
+}
+
+TEST(TIMES, TEST1) {
   std::stringstream in("(a+|b*)");
   auto result = CreateASTFromStream(&in);
   auto nfa = CreateNFAFromAST(result.get());
@@ -308,7 +377,7 @@ TEST(TIMES, DISABLED_TEST1) {
       "DFA with regex (a+|b*)");
 }
 
-TEST(TIMES, DISABLED_TEST2) {
+TEST(TIMES, TEST2) {
   std::stringstream in("((a*|b*|c*)d+e+)|(x*y+z*)");
   auto result = CreateASTFromStream(&in);
   auto nfa = CreateNFAFromAST(result.get());
@@ -339,7 +408,7 @@ TEST(TIMES, DISABLED_TEST2) {
       "DFA with regex (a+|b*)");
 }
 
-TEST(TIMES, DISABLED_TEST3) {
+TEST(TIMES, TEST3) {
   std::stringstream in("((((((((a*)+)+)*)+)*)*)+)+");
   auto result = CreateASTFromStream(&in);
   auto nfa = CreateNFAFromAST(result.get());

@@ -25,4 +25,17 @@ void Benchmark(const Function &function, const std::string &functionName) {
             << duration_cast<milliseconds>(stop - start).count() << " mcs\n";
 }
 
+std::vector<char> CharRange(char first, char last) {
+  assert(first <= last);
+  std::vector<char> range;
+  while (true) {
+    range.emplace_back(first);
+    if (first == last) {
+      break;
+    }
+    first++;
+  }
+  return range;
+}
+
 #endif // REGEX_PARSER_UTIL_HPP

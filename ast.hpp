@@ -157,13 +157,6 @@ std::unique_ptr<ASTNode> CreateASTFromTokenizer(Tokenizer &tokenizer, bool inCha
       } else {
         break;
       }
-    } else if (std::holds_alternative<SquareBracketToken>(token)) {
-      if (std::get<SquareBracketToken>(token) == SquareBracketToken::OPEN) {
-        tokenizer.Next();
-        addConsecutive(std::move(CreateASTFromTokenizer(tokenizer, true)));
-      } else {
-        break;
-      }
     } else {
       break;
     }

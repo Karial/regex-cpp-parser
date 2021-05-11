@@ -7,6 +7,7 @@
 #include <variant>
 
 #include "character_classes.hpp"
+#include "util.hpp"
 
 class SymbolToken {
  public:
@@ -45,21 +46,20 @@ class Empty {
 
 enum class RoundBracketToken { OPEN, CLOSE };
 
-enum class SquareBracketToken { OPEN, CLOSE };
-
-typedef std::variant<SymbolToken, PlusToken, StarToken, OrToken, QuestionToken, RoundBracketToken, SquareBracketToken,
+typedef std::variant<SymbolToken, PlusToken, StarToken, OrToken, QuestionToken, RoundBracketToken,
                      Empty>
     Token;
 
 class Tokenizer {
  public:
-  explicit Tokenizer(std::istream *in) : stream_(in) { Next(); }
+  explicit Tokenizer(std::istream *in) : stream_(in), inCharacterClass_(false) { Next(); }
 
   void Next() {
     if ((stream_->peek() == EOF)) {
       currentToken_ = Empty{};
       return;
     }
+
     switch (stream_->peek()) {
       case '+': {
         stream_->get();
@@ -93,45 +93,12 @@ class Tokenizer {
       }
       case '[': {
         stream_->get();
-        currentToken_ = SquareBracketToken::OPEN;
-        break;
-      }
-      case ']': {
-        stream_->get();
-        currentToken_ = SquareBracketToken::CLOSE;
+        GetCharacterClass();
         break;
       }
       case '\\': {
         stream_->get();
-        switch (char c = static_cast<char>(stream_->get()); c) {
-          case 'd': {
-            currentToken_ = SymbolToken(DigitClass);
-            break;
-          }
-          case 'D': {
-            currentToken_ = SymbolToken(NonDigitClass);
-            break;
-          }
-          case 'w': {
-            currentToken_ = SymbolToken(WordClass);
-            break;
-          }
-          case 'W': {
-            currentToken_ = SymbolToken(NonWordClass);
-            break;
-          }
-          case 's': {
-            currentToken_ = SymbolToken(SpaceClass);
-            break;
-          }
-          case 'S': {
-            currentToken_ = SymbolToken(NonSpaceClass);
-            break;
-          }
-          default: {
-            currentToken_ = SymbolToken{{c}};
-          }
-        }
+        GetSpecialToken();
         break;
       }
       default: {
@@ -144,8 +111,64 @@ class Tokenizer {
   Token GetToken() const { return currentToken_; }
 
  private:
+  void GetSpecialToken() {
+    switch (char c = static_cast<char>(stream_->get()); c) {
+      case 'd': {
+        currentToken_ = SymbolToken(DigitClass);
+        break;
+      }
+      case 'D': {
+        currentToken_ = SymbolToken(NonDigitClass);
+        break;
+      }
+      case 'w': {
+        currentToken_ = SymbolToken(WordClass);
+        break;
+      }
+      case 'W': {
+        currentToken_ = SymbolToken(NonWordClass);
+        break;
+      }
+      case 's': {
+        currentToken_ = SymbolToken(SpaceClass);
+        break;
+      }
+      case 'S': {
+        currentToken_ = SymbolToken(NonSpaceClass);
+        break;
+      }
+      default: {
+        currentToken_ = SymbolToken{{c}};
+      }
+    }
+  }
+
+  void GetCharacterClass() {
+    std::vector<char> syms;
+    while ((syms.emplace_back(stream_->get())) != ']') {
+      if (syms.back() == '\\') {
+        syms.pop_back();
+        GetSpecialToken();
+        for (const auto &c : std::get<SymbolToken>(currentToken_).syms) {
+          syms.emplace_back(c);
+        }
+      }
+      size_t symsSize = syms.size();
+      if (symsSize >= 3 && syms[symsSize - 2] == '-') {
+        char first = syms[symsSize - 3], last = syms[symsSize - 1];
+        syms.erase(begin(syms) + syms.size() - 3, end(syms));
+        for (const auto &c : CharRange(first, last)) {
+          syms.emplace_back(c);
+        }
+      }
+    }
+    syms.pop_back();
+    currentToken_ = SymbolToken{syms};
+  }
+
   std::istream *stream_;
   Token currentToken_;
+  bool inCharacterClass_;
 };
 
 #endif  // REGEX_PARSER_TOKENIZER_HPP
