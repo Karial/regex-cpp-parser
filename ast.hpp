@@ -118,13 +118,24 @@ class QuestionNode : public ASTNode {
   std::unique_ptr<ASTNode> value_;
 };
 
-std::unique_ptr<ASTNode> CreateASTFromTokenizer(Tokenizer &tokenizer) {
+std::unique_ptr<ASTNode> CreateASTFromTokenizer(Tokenizer &tokenizer, bool inCharacterClass = false) {
   Token token = tokenizer.GetToken();
   std::vector<std::vector<std::unique_ptr<ASTNode>>> tokensSequences(1);
+
+  auto addConsecutive = [&](std::unique_ptr<ASTNode> &&newNode) {
+    if (inCharacterClass) {
+      if (!tokensSequences.back().empty()) {
+        tokensSequences.emplace_back();
+      }
+      tokensSequences.back().emplace_back(std::move(newNode));
+    } else {
+      tokensSequences.back().emplace_back(std::move(newNode));
+    }
+  };
+
   while (!std::holds_alternative<Empty>(token)) {
     if (std::holds_alternative<SymbolToken>(token)) {
-      tokensSequences.back().emplace_back(
-          std::make_unique<SymbolNode>(std::get<SymbolToken>(token).syms));
+      addConsecutive(std::make_unique<SymbolNode>(std::get<SymbolToken>(token).syms));
     } else if (std::holds_alternative<PlusToken>(token)) {
       auto lastToken = std::move(tokensSequences.back().back());
       tokensSequences.back().back() =
@@ -139,10 +150,17 @@ std::unique_ptr<ASTNode> CreateASTFromTokenizer(Tokenizer &tokenizer) {
           std::make_unique<QuestionNode>(std::move(lastToken));
     } else if (std::holds_alternative<OrToken>(token)) {
       tokensSequences.emplace_back();
-    } else if (std::holds_alternative<BracketToken>(token)) {
-      if (std::get<BracketToken>(token) == BracketToken::OPEN) {
+    } else if (std::holds_alternative<RoundBracketToken>(token)) {
+      if (std::get<RoundBracketToken>(token) == RoundBracketToken::OPEN) {
         tokenizer.Next();
-        tokensSequences.back().emplace_back(CreateASTFromTokenizer(tokenizer));
+        addConsecutive(std::move(CreateASTFromTokenizer(tokenizer)));
+      } else {
+        break;
+      }
+    } else if (std::holds_alternative<SquareBracketToken>(token)) {
+      if (std::get<SquareBracketToken>(token) == SquareBracketToken::OPEN) {
+        tokenizer.Next();
+        addConsecutive(std::move(CreateASTFromTokenizer(tokenizer, true)));
       } else {
         break;
       }
@@ -157,8 +175,7 @@ std::unique_ptr<ASTNode> CreateASTFromTokenizer(Tokenizer &tokenizer) {
   for (auto &tokensSequence : tokensSequences) {
     auto resultToken = std::move(tokensSequence[0]);
     for (size_t i = 1; i < tokensSequence.size(); ++i) {
-      resultToken = std::make_unique<ConcatNode>(std::move(resultToken),
-                                                 std::move(tokensSequence[i]));
+      resultToken = std::make_unique<ConcatNode>(std::move(resultToken), std::move(tokensSequence[i]));
     }
     tokens.emplace_back(std::move(resultToken));
   }

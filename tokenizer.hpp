@@ -43,9 +43,11 @@ class Empty {
   bool operator==(const Empty &) const { return true; }
 };
 
-enum class BracketToken { OPEN, CLOSE };
+enum class RoundBracketToken { OPEN, CLOSE };
 
-typedef std::variant<SymbolToken, PlusToken, StarToken, OrToken, QuestionToken, BracketToken,
+enum class SquareBracketToken { OPEN, CLOSE };
+
+typedef std::variant<SymbolToken, PlusToken, StarToken, OrToken, QuestionToken, RoundBracketToken, SquareBracketToken,
                      Empty>
     Token;
 
@@ -81,12 +83,22 @@ class Tokenizer {
       }
       case '(': {
         stream_->get();
-        currentToken_ = BracketToken::OPEN;
+        currentToken_ = RoundBracketToken::OPEN;
         break;
       }
       case ')': {
         stream_->get();
-        currentToken_ = BracketToken::CLOSE;
+        currentToken_ = RoundBracketToken::CLOSE;
+        break;
+      }
+      case '[': {
+        stream_->get();
+        currentToken_ = SquareBracketToken::OPEN;
+        break;
+      }
+      case ']': {
+        stream_->get();
+        currentToken_ = SquareBracketToken::CLOSE;
         break;
       }
       case '\\': {

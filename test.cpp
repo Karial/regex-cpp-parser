@@ -255,6 +255,28 @@ TEST(CHARACTER_GROUPS, NON_SPACE_CHARACTERS) {
   ASSERT_FALSE(dfa.Check("\fdfgfd"));
 }
 
+TEST(CHARACTER_GROUPS, CUSTOM_GROUP1) {
+  std::stringstream in("[abc]+");
+  auto ast = CreateASTFromStream(&in);
+  auto nfa = CreateNFAFromAST(ast.get());
+  ASSERT_TRUE(nfa.Check("abaccb"));
+  ASSERT_FALSE(nfa.Check("abcde"));
+  auto dfa = CreateDFAFromNFA(nfa);
+  ASSERT_TRUE(dfa.Check("abaccb"));
+  ASSERT_FALSE(dfa.Check("abcde"));
+}
+
+TEST(CHARACTER_GROUPS, CUSTOM_GROUP2) {
+  std::stringstream in("[\\{\\}\\(\\)\\[\\]]+");
+  auto ast = CreateASTFromStream(&in);
+  auto nfa = CreateNFAFromAST(ast.get());
+  ASSERT_TRUE(nfa.Check("{()(}{})[][](){}][]["));
+  ASSERT_FALSE(nfa.Check("(a)"));
+  auto dfa = CreateDFAFromNFA(nfa);
+  ASSERT_TRUE(dfa.Check("{()(}{})[][](){}][]["));
+  ASSERT_FALSE(dfa.Check("(a)"));
+}
+
 TEST(TIMES, DISABLED_TEST1) {
   std::stringstream in("(a+|b*)");
   auto result = CreateASTFromStream(&in);
