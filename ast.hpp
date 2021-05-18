@@ -137,24 +137,13 @@ class RangeNode : public ASTNode {
   Range range_;
 };
 
-std::unique_ptr<ASTNode> CreateASTFromTokenizer(Tokenizer &tokenizer, bool inCharacterClass = false) {
+std::unique_ptr<ASTNode> CreateASTFromTokenizer(Tokenizer &tokenizer) {
   Token token = tokenizer.GetToken();
   std::vector<std::vector<std::unique_ptr<ASTNode>>> tokensSequences(1);
 
-  auto addConsecutive = [&](std::unique_ptr<ASTNode> &&newNode) {
-    if (inCharacterClass) {
-      if (!tokensSequences.back().empty()) {
-        tokensSequences.emplace_back();
-      }
-      tokensSequences.back().emplace_back(std::move(newNode));
-    } else {
-      tokensSequences.back().emplace_back(std::move(newNode));
-    }
-  };
-
   while (!std::holds_alternative<Empty>(token)) {
     if (std::holds_alternative<SymbolToken>(token)) {
-      addConsecutive(std::make_unique<SymbolNode>(std::get<SymbolToken>(token).syms));
+      tokensSequences.back().emplace_back(std::make_unique<SymbolNode>(std::get<SymbolToken>(token).syms));
     } else if (std::holds_alternative<PlusToken>(token)) {
       auto lastToken = std::move(tokensSequences.back().back());
       tokensSequences.back().back() =
@@ -176,7 +165,7 @@ std::unique_ptr<ASTNode> CreateASTFromTokenizer(Tokenizer &tokenizer, bool inCha
     } else if (std::holds_alternative<RoundBracketToken>(token)) {
       if (std::get<RoundBracketToken>(token) == RoundBracketToken::OPEN) {
         tokenizer.Next();
-        addConsecutive(std::move(CreateASTFromTokenizer(tokenizer)));
+        tokensSequences.back().emplace_back(std::move(CreateASTFromTokenizer(tokenizer)));
       } else {
         break;
       }
