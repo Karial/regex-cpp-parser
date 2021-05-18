@@ -43,10 +43,35 @@ class FiniteAutomata {
     }
   }
 
+  FiniteAutomata Copy() const {
+    FiniteAutomata res;
+    res.begin = new Node{};
+    std::queue<std::pair<Node *, Node *>> nodesQueue;
+    std::unordered_map<Node *, Node *> nodesMap;
+    nodesQueue.emplace(begin, res.begin);
+    while (!nodesQueue.empty()) {
+      auto[node, copyNode] = nodesQueue.front();
+      nodesQueue.pop();
+      for (const auto &[k, nextNodes]: node->next) {
+        for (const auto &nextNode : nextNodes) {
+          if (!nodesMap[nextNode]) {
+            nodesMap[nextNode] = new Node{};
+            nodesQueue.emplace(nextNode, nodesMap[nextNode]);
+          }
+          copyNode->next[k].emplace_back(nodesMap[nextNode]);
+        }
+      }
+    }
+    res.end = nodesMap[end];
+
+    return res;
+  }
+
   friend FiniteAutomata CreateNFAFromAST(ASTNode *ast);
   friend FiniteAutomata CreateDFAFromNFA(const FiniteAutomata &nfa);
 
  private:
+
   struct Node {
     bool isFinal{false};
     std::unordered_map<char, std::vector<Node *>> next;
@@ -144,6 +169,48 @@ FiniteAutomata CreateNFAFromAST(ASTNode *ast) {
     result.begin->next[0] = {valueAutomata.begin};
     valueAutomata.end->next[0].emplace_back(result.end);
     result.begin->next[0].emplace_back(result.end);
+    valueAutomata.end->isFinal = false;
+  }
+  if (auto b = dynamic_cast<RangeNode *>(ast)) {
+    auto valueAutomata = CreateNFAFromAST(b->GetValue().get());
+    result.begin = new FiniteAutomata::Node;
+    result.end = new FiniteAutomata::Node{true};
+
+    Range range = b->GetRange();
+    auto curNode = result.begin;
+    for (int i = 0; i < range.lowerBound; ++i) {
+      auto valueAutomataCopy = valueAutomata.Copy();
+      curNode->next[0] = {valueAutomata.begin};
+      valueAutomata.end->next[0].emplace_back(result.end);
+      valueAutomata.end->isFinal = false;
+
+      curNode = result.end;
+      curNode->isFinal = false;
+      result.end = new FiniteAutomata::Node{true};
+      valueAutomata = valueAutomataCopy;
+    }
+
+    if (range.upperBound != SIZE_T_MAX) {
+      for (int i = 0; i < range.upperBound - range.lowerBound; ++i) {
+        auto valueAutomataCopy = valueAutomata.Copy();
+        curNode->next[0] = {valueAutomata.begin, result.end};
+        valueAutomata.end->next[0].emplace_back(result.end);
+        valueAutomata.end->isFinal = false;
+
+        curNode = result.end;
+        curNode->isFinal = false;
+        result.end = new FiniteAutomata::Node{true};
+        valueAutomata = valueAutomataCopy;
+      }
+
+      result.end = curNode;
+      result.end->isFinal = true;
+    } else {
+      curNode->next[0] = {valueAutomata.begin, result.end};
+      valueAutomata.end->next[0].emplace_back(result.end);
+      result.end->next[0].emplace_back(curNode);
+    }
+
     valueAutomata.end->isFinal = false;
   }
 

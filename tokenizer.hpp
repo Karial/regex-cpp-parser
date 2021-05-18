@@ -39,6 +39,14 @@ class OrToken {
   bool operator==(const OrToken &) const { return true; }
 };
 
+class RangeToken {
+ public:
+  bool operator==(const RangeToken &rhs) const { return true; }
+
+ public:
+  Range range;
+};
+
 class Empty {
  public:
   bool operator==(const Empty &) const { return true; }
@@ -46,13 +54,13 @@ class Empty {
 
 enum class RoundBracketToken { OPEN, CLOSE };
 
-typedef std::variant<SymbolToken, PlusToken, StarToken, OrToken, QuestionToken, RoundBracketToken,
+typedef std::variant<SymbolToken, PlusToken, StarToken, OrToken, QuestionToken, RangeToken, RoundBracketToken,
                      Empty>
     Token;
 
 class Tokenizer {
  public:
-  explicit Tokenizer(std::istream *in) : stream_(in), inCharacterClass_(false) { Next(); }
+  explicit Tokenizer(std::istream *in) : stream_(in) { Next(); }
 
   void Next() {
     if ((stream_->peek() == EOF)) {
@@ -89,6 +97,11 @@ class Tokenizer {
       case ')': {
         stream_->get();
         currentToken_ = RoundBracketToken::CLOSE;
+        break;
+      }
+      case '{': {
+        stream_->get();
+        GetRangeToken();
         break;
       }
       case '[': {
@@ -166,9 +179,33 @@ class Tokenizer {
     currentToken_ = SymbolToken{syms};
   }
 
+  void GetRangeToken() {
+    Range range;
+    while (stream_->peek() != ',') {
+      assert(isdigit(stream_->peek()));
+
+      range.lowerBound *= 10;
+      range.lowerBound += static_cast<size_t>(stream_->get() - '0');
+    }
+    stream_->get();
+    while (stream_->peek() != '}') {
+      if (range.upperBound == SIZE_T_MAX) {
+        range.upperBound = 0;
+      }
+      assert(isdigit(stream_->peek()));
+
+      range.upperBound *= 10;
+      range.upperBound += static_cast<size_t>(stream_->get() - '0');
+    }
+    stream_->get();
+
+    assert(range.lowerBound <= range.upperBound);
+
+    currentToken_ = RangeToken{range};
+  }
+
   std::istream *stream_;
   Token currentToken_;
-  bool inCharacterClass_;
 };
 
 #endif  // REGEX_PARSER_TOKENIZER_HPP

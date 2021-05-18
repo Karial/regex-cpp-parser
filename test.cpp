@@ -346,6 +346,65 @@ TEST(CHARACTER_GROUPS, RANGE3) {
   ASSERT_FALSE(dfa.Check({']'}));
 }
 
+TEST(NUM_RANGES, TEST1) {
+  std::stringstream in("a{2,3}");
+  auto ast = CreateASTFromStream(&in);
+  auto nfa = CreateNFAFromAST(ast.get());
+  ASSERT_FALSE(nfa.Check("a"));
+  ASSERT_TRUE(nfa.Check("aa"));
+  ASSERT_TRUE(nfa.Check("aaa"));
+  ASSERT_FALSE(nfa.Check("aaaa"));
+  auto dfa = CreateDFAFromNFA(nfa);
+  ASSERT_FALSE(dfa.Check("a"));
+  ASSERT_TRUE(dfa.Check("aa"));
+  ASSERT_TRUE(dfa.Check("aaa"));
+  ASSERT_FALSE(dfa.Check("aaaa"));
+}
+
+TEST(NUM_RANGES, TEST2) {
+  std::stringstream in("[ab]{2,3}");
+  auto ast = CreateASTFromStream(&in);
+  auto nfa = CreateNFAFromAST(ast.get());
+  ASSERT_FALSE(nfa.Check("a"));
+  ASSERT_TRUE(nfa.Check("aa"));
+  ASSERT_TRUE(nfa.Check("ab"));
+  ASSERT_TRUE(nfa.Check("ba"));
+  ASSERT_TRUE(nfa.Check("bb"));
+  ASSERT_TRUE(nfa.Check("aba"));
+  ASSERT_FALSE(nfa.Check("aaaa"));
+  auto dfa = CreateDFAFromNFA(nfa);
+  ASSERT_FALSE(dfa.Check("a"));
+  ASSERT_TRUE(dfa.Check("aa"));
+  ASSERT_TRUE(dfa.Check("ab"));
+  ASSERT_TRUE(dfa.Check("ba"));
+  ASSERT_TRUE(dfa.Check("bb"));
+  ASSERT_TRUE(dfa.Check("aba"));
+  ASSERT_FALSE(dfa.Check("aaaa"));
+}
+
+TEST(NUM_RANGES, TEST3) {
+  std::stringstream in("a{,3}");
+  auto ast = CreateASTFromStream(&in);
+  auto nfa = CreateNFAFromAST(ast.get());
+  for (int i = 1; i <= 3; ++i) {
+    std::string curTest;
+    for (int j = 0; j < i; ++j) {
+      curTest += 'a';
+    }
+    ASSERT_TRUE(nfa.Check(curTest));
+  }
+  ASSERT_FALSE(nfa.Check("aaaa"));
+  auto dfa = CreateDFAFromNFA(nfa);
+  for (int i = 1; i <= 3; ++i) {
+    std::string curTest;
+    for (int j = 0; j < i; ++j) {
+      curTest += 'a';
+    }
+    ASSERT_TRUE(dfa.Check(curTest));
+  }
+  ASSERT_FALSE(dfa.Check("aaaa"));
+}
+
 TEST(TIMES, TEST1) {
   std::stringstream in("(a+|b*)");
   auto result = CreateASTFromStream(&in);

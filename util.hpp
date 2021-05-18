@@ -4,6 +4,11 @@
 #include <chrono>
 #include <iostream>
 
+class Range {
+ public:
+  size_t lowerBound = 0, upperBound = SIZE_T_MAX;
+};
+
 template<typename Container>
 struct SetHash {
   size_t operator()(const Container &container) const {

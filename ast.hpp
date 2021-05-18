@@ -118,6 +118,25 @@ class QuestionNode : public ASTNode {
   std::unique_ptr<ASTNode> value_;
 };
 
+class RangeNode : public ASTNode {
+ public:
+  explicit RangeNode(std::unique_ptr<ASTNode> &&value, Range range)
+      : value_(std::move(value)), range_(range) {}
+
+  std::string Output() const override {
+    std::string result = "RangeNode(" + value_->Output() + ")";
+    return result;
+  }
+
+  const std::unique_ptr<ASTNode> &GetValue() const { return value_; }
+
+  Range GetRange() const { return range_; }
+
+ private:
+  std::unique_ptr<ASTNode> value_;
+  Range range_;
+};
+
 std::unique_ptr<ASTNode> CreateASTFromTokenizer(Tokenizer &tokenizer, bool inCharacterClass = false) {
   Token token = tokenizer.GetToken();
   std::vector<std::vector<std::unique_ptr<ASTNode>>> tokensSequences(1);
@@ -148,6 +167,10 @@ std::unique_ptr<ASTNode> CreateASTFromTokenizer(Tokenizer &tokenizer, bool inCha
       auto lastToken = std::move(tokensSequences.back().back());
       tokensSequences.back().back() =
           std::make_unique<QuestionNode>(std::move(lastToken));
+    } else if (std::holds_alternative<RangeToken>(token)) {
+      auto lastToken = std::move(tokensSequences.back().back());
+      tokensSequences.back().back() =
+          std::make_unique<RangeNode>(std::move(lastToken), std::get<RangeToken>(token).range);
     } else if (std::holds_alternative<OrToken>(token)) {
       tokensSequences.emplace_back();
     } else if (std::holds_alternative<RoundBracketToken>(token)) {
