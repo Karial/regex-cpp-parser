@@ -3,6 +3,7 @@
 
 #include "finite_automata.hpp"
 #include "character_classes.hpp"
+#include "fast_finite_automata.hpp"
 
 void Check(const FiniteAutomata &automata, const std::string &text) {
   if (automata.Check(text)) {
@@ -17,7 +18,7 @@ int main() {
   auto dfa = CreateDFAFromStream(&dfa_in);
   std::stringstream nfa_in("a*b+");
   auto nfa = CreateNFAFromStream(&nfa_in);
-  Check(dfa, "aaab");
-  Check(nfa, "aa");
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  std::cout << fastDfa.Check("aaab") << '\n';
   return 0;
 }

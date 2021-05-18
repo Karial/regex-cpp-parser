@@ -10,6 +10,8 @@
 #include "ast.hpp"
 #include "util.hpp"
 
+class FastFiniteAutomata;
+
 class FiniteAutomata {
  public:
   bool Check(const std::string &str) const {
@@ -49,6 +51,7 @@ class FiniteAutomata {
     std::queue<std::pair<Node *, Node *>> nodesQueue;
     std::unordered_map<Node *, Node *> nodesMap;
     nodesQueue.emplace(begin, res.begin);
+    nodesMap[begin] = res.begin;
     while (!nodesQueue.empty()) {
       auto[node, copyNode] = nodesQueue.front();
       nodesQueue.pop();
@@ -56,6 +59,7 @@ class FiniteAutomata {
         for (const auto &nextNode : nextNodes) {
           if (!nodesMap[nextNode]) {
             nodesMap[nextNode] = new Node{};
+            nodesMap[nextNode]->isFinal = nextNode->isFinal;
             nodesQueue.emplace(nextNode, nodesMap[nextNode]);
           }
           copyNode->next[k].emplace_back(nodesMap[nextNode]);
@@ -69,6 +73,7 @@ class FiniteAutomata {
 
   friend FiniteAutomata CreateNFAFromAST(ASTNode *ast);
   friend FiniteAutomata CreateDFAFromNFA(const FiniteAutomata &nfa);
+  friend FastFiniteAutomata CreateFastFiniteAutomata(const FiniteAutomata &dfa);
 
  private:
 

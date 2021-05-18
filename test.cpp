@@ -1,4 +1,5 @@
 #include "finite_automata.hpp"
+#include "fast_finite_automata.hpp"
 #include <fstream>
 #include <gtest/gtest.h>
 
@@ -17,6 +18,12 @@ TEST(BASIC_FUNCTIONALITY_TESTS, TEST1) {
   ASSERT_FALSE(dfa.Check("a"));
   ASSERT_TRUE(dfa.Check("b"));
   ASSERT_TRUE(dfa.Check("aaaaabbbbbbbbbbbbb"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_TRUE(fastDfa.Check("ab"));
+  ASSERT_FALSE(fastDfa.Check("abc"));
+  ASSERT_FALSE(fastDfa.Check("a"));
+  ASSERT_TRUE(fastDfa.Check("b"));
+  ASSERT_TRUE(fastDfa.Check("aaaaabbbbbbbbbbbbb"));
 }
 
 TEST(BASIC_FUNCTIONALITY_TESTS, TEST2) {
@@ -34,6 +41,12 @@ TEST(BASIC_FUNCTIONALITY_TESTS, TEST2) {
   ASSERT_FALSE(dfa.Check("a"));
   ASSERT_TRUE(dfa.Check("b"));
   ASSERT_TRUE(dfa.Check("aaaaabbbbbbbbbbbbb"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_TRUE(fastDfa.Check("ab"));
+  ASSERT_TRUE(fastDfa.Check("c"));
+  ASSERT_FALSE(fastDfa.Check("a"));
+  ASSERT_TRUE(fastDfa.Check("b"));
+  ASSERT_TRUE(fastDfa.Check("aaaaabbbbbbbbbbbbb"));
 }
 
 TEST(BASIC_FUNCTIONALITY_TESTS, TEST3) {
@@ -51,6 +64,12 @@ TEST(BASIC_FUNCTIONALITY_TESTS, TEST3) {
   ASSERT_TRUE(dfa.Check("a"));
   ASSERT_TRUE(dfa.Check("b"));
   ASSERT_FALSE(dfa.Check("aaaaabbbbbbbbbbbbb"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_TRUE(fastDfa.Check(""));
+  ASSERT_FALSE(fastDfa.Check("c"));
+  ASSERT_TRUE(fastDfa.Check("a"));
+  ASSERT_TRUE(fastDfa.Check("b"));
+  ASSERT_FALSE(fastDfa.Check("aaaaabbbbbbbbbbbbb"));
 }
 
 TEST(BASIC_FUNCTIONALITY_TESTS, TEST4) {
@@ -70,6 +89,13 @@ TEST(BASIC_FUNCTIONALITY_TESTS, TEST4) {
   ASSERT_TRUE(dfa.Check("(aa)"));
   ASSERT_FALSE(dfa.Check("b"));
   ASSERT_FALSE(dfa.Check("aaaaabbbbbbbbbbbbb"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_TRUE(fastDfa.Check("()"));
+  ASSERT_FALSE(fastDfa.Check("c"));
+  ASSERT_TRUE(fastDfa.Check("(a)"));
+  ASSERT_TRUE(fastDfa.Check("(aa)"));
+  ASSERT_FALSE(fastDfa.Check("b"));
+  ASSERT_FALSE(fastDfa.Check("aaaaabbbbbbbbbbbbb"));
 }
 
 TEST(BASIC_FUNCTIONALITY_TESTS, TEST5) {
@@ -81,6 +107,9 @@ TEST(BASIC_FUNCTIONALITY_TESTS, TEST5) {
   auto dfa = CreateDFAFromNFA(nfa);
   ASSERT_TRUE(dfa.Check("***"));
   ASSERT_FALSE(dfa.Check("c"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_TRUE(fastDfa.Check("***"));
+  ASSERT_FALSE(fastDfa.Check("c"));
 }
 
 TEST(BASIC_FUNCTIONALITY_TESTS, TEST6) {
@@ -96,6 +125,11 @@ TEST(BASIC_FUNCTIONALITY_TESTS, TEST6) {
   ASSERT_TRUE(dfa.Check("a"));
   ASSERT_FALSE(dfa.Check("aa"));
   ASSERT_FALSE(dfa.Check("c"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_TRUE(fastDfa.Check(""));
+  ASSERT_TRUE(fastDfa.Check("a"));
+  ASSERT_FALSE(fastDfa.Check("aa"));
+  ASSERT_FALSE(fastDfa.Check("c"));
 }
 
 TEST(BASIC_FUNCTIONALITY_TESTS, TEST7) {
@@ -107,6 +141,9 @@ TEST(BASIC_FUNCTIONALITY_TESTS, TEST7) {
   auto dfa = CreateDFAFromNFA(nfa);
   ASSERT_TRUE(dfa.Check("?"));
   ASSERT_FALSE(dfa.Check("c"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_TRUE(fastDfa.Check("?"));
+  ASSERT_FALSE(fastDfa.Check("c"));
 }
 
 TEST(CHARACTER_GROUPS, DIGITS) {
@@ -128,14 +165,24 @@ TEST(CHARACTER_GROUPS, DIGITS) {
   ASSERT_FALSE(dfa.Check("a723"));
   ASSERT_FALSE(dfa.Check("-a711"));
   ASSERT_FALSE(dfa.Check("-fgfdg"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_TRUE(fastDfa.Check("1231"));
+  ASSERT_TRUE(fastDfa.Check("12"));
+  ASSERT_TRUE(fastDfa.Check("7"));
+  ASSERT_FALSE(fastDfa.Check("7fgfdg"));
+  ASSERT_FALSE(fastDfa.Check("a723"));
+  ASSERT_FALSE(fastDfa.Check("-a711"));
+  ASSERT_FALSE(fastDfa.Check("-fgfdg"));
 
   for (char c = 1; c < 127; ++c) {
     if (isdigit(c)) {
       ASSERT_TRUE(nfa.Check(std::string({c})));
       ASSERT_TRUE(dfa.Check(std::string({c})));
+      ASSERT_TRUE(fastDfa.Check(std::string({c})));
     } else {
       ASSERT_FALSE(nfa.Check(std::string({c})));
       ASSERT_FALSE(dfa.Check(std::string({c})));
+      ASSERT_FALSE(fastDfa.Check(std::string({c})));
     }
   }
 }
@@ -157,14 +204,23 @@ TEST(CHARACTER_GROUPS, NON_DIGITS) {
   ASSERT_TRUE(dfa.Check("ddfgfdg?;lsdffg"));
   ASSERT_TRUE(dfa.Check("dfgfgsfgfddfg"));
   ASSERT_TRUE(dfa.Check("dfg;l,;lmfgb"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_FALSE(fastDfa.Check("sdkf6sdfbdsf"));
+  ASSERT_FALSE(fastDfa.Check("23dfg"));
+  ASSERT_FALSE(fastDfa.Check("dfg561"));
+  ASSERT_TRUE(fastDfa.Check("ddfgfdg?;lsdffg"));
+  ASSERT_TRUE(fastDfa.Check("dfgfgsfgfddfg"));
+  ASSERT_TRUE(fastDfa.Check("dfg;l,;lmfgb"));
 
   for (char c = 1; c < 127; ++c) {
     if (!isdigit(c)) {
       ASSERT_TRUE(nfa.Check(std::string({c})));
       ASSERT_TRUE(dfa.Check(std::string({c})));
+      ASSERT_TRUE(fastDfa.Check(std::string({c})));
     } else {
       ASSERT_FALSE(nfa.Check(std::string({c})));
       ASSERT_FALSE(dfa.Check(std::string({c})));
+      ASSERT_FALSE(fastDfa.Check(std::string({c})));
     }
   }
 }
@@ -186,14 +242,23 @@ TEST(CHARACTER_GROUPS, WORD_CHARACTERS) {
   ASSERT_FALSE(dfa.Check("ddfgfdg?;lsdffg"));
   ASSERT_FALSE(dfa.Check("dfgfgsf,gfd!dfg"));
   ASSERT_FALSE(dfa.Check("dfg;l,;lmfgb"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_TRUE(fastDfa.Check("sdkf6sdfbdsf"));
+  ASSERT_TRUE(fastDfa.Check("23dfg"));
+  ASSERT_TRUE(fastDfa.Check("dfg561"));
+  ASSERT_FALSE(fastDfa.Check("ddfgfdg?;lsdffg"));
+  ASSERT_FALSE(fastDfa.Check("dfgfgsf,gfd!dfg"));
+  ASSERT_FALSE(fastDfa.Check("dfg;l,;lmfgb"));
 
   for (char c = 1; c < 127; ++c) {
     if (isalnum(c) || c == '_') {
       ASSERT_TRUE(nfa.Check(std::string({c})));
       ASSERT_TRUE(dfa.Check(std::string({c})));
+      ASSERT_TRUE(fastDfa.Check(std::string({c})));
     } else {
       ASSERT_FALSE(nfa.Check(std::string({c})));
       ASSERT_FALSE(dfa.Check(std::string({c})));
+      ASSERT_FALSE(fastDfa.Check(std::string({c})));
     }
   }
 }
@@ -215,14 +280,23 @@ TEST(CHARACTER_GROUPS, NON_WORD_CHARACTERS) {
   ASSERT_TRUE(dfa.Check("??!?@--!@?"));
   ASSERT_TRUE(dfa.Check("-?+--!---?"));
   ASSERT_TRUE(dfa.Check("+-\\(\\)"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_FALSE(fastDfa.Check("sdkf6sdfbdsf"));
+  ASSERT_FALSE(fastDfa.Check("23dfg"));
+  ASSERT_FALSE(fastDfa.Check("--!dfg561"));
+  ASSERT_TRUE(fastDfa.Check("??!?@--!@?"));
+  ASSERT_TRUE(fastDfa.Check("-?+--!---?"));
+  ASSERT_TRUE(fastDfa.Check("+-\\(\\)"));
 
   for (char c = 1; c < 127; ++c) {
     if (!(isalnum(c) || c == '_')) {
       ASSERT_TRUE(nfa.Check(std::string({c})));
       ASSERT_TRUE(dfa.Check(std::string({c})));
+      ASSERT_TRUE(fastDfa.Check(std::string({c})));
     } else {
       ASSERT_FALSE(nfa.Check(std::string({c})));
       ASSERT_FALSE(dfa.Check(std::string({c})));
+      ASSERT_FALSE(fastDfa.Check(std::string({c})));
     }
   }
 }
@@ -236,6 +310,9 @@ TEST(CHARACTER_GROUPS, SPACE_CHARACTERS) {
   auto dfa = CreateDFAFromNFA(nfa);
   ASSERT_FALSE(dfa.Check("\n\tdfgfd\f"));
   ASSERT_TRUE(dfa.Check("\n\t\f\r"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_FALSE(fastDfa.Check("\n\tdfgfd\f"));
+  ASSERT_TRUE(fastDfa.Check("\n\t\f\r"));
 }
 
 TEST(CHARACTER_GROUPS, NON_SPACE_CHARACTERS) {
@@ -253,6 +330,12 @@ TEST(CHARACTER_GROUPS, NON_SPACE_CHARACTERS) {
   ASSERT_FALSE(dfa.Check("\tdfgfd"));
   ASSERT_FALSE(dfa.Check("\rdfgfd"));
   ASSERT_FALSE(dfa.Check("\fdfgfd"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_TRUE(fastDfa.Check("dfgfd"));
+  ASSERT_FALSE(fastDfa.Check("\ndfgfd"));
+  ASSERT_FALSE(fastDfa.Check("\tdfgfd"));
+  ASSERT_FALSE(fastDfa.Check("\rdfgfd"));
+  ASSERT_FALSE(fastDfa.Check("\fdfgfd"));
 }
 
 TEST(CHARACTER_GROUPS, CUSTOM_GROUP1) {
@@ -264,6 +347,9 @@ TEST(CHARACTER_GROUPS, CUSTOM_GROUP1) {
   auto dfa = CreateDFAFromNFA(nfa);
   ASSERT_TRUE(dfa.Check("abaccb"));
   ASSERT_FALSE(dfa.Check("abcde"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_TRUE(fastDfa.Check("abaccb"));
+  ASSERT_FALSE(fastDfa.Check("abcde"));
 }
 
 TEST(CHARACTER_GROUPS, CUSTOM_GROUP2) {
@@ -275,6 +361,9 @@ TEST(CHARACTER_GROUPS, CUSTOM_GROUP2) {
   auto dfa = CreateDFAFromNFA(nfa);
   ASSERT_TRUE(dfa.Check("{()(}{})[][](){}][]["));
   ASSERT_FALSE(dfa.Check("(a)"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_TRUE(fastDfa.Check("{()(}{})[][](){}][]["));
+  ASSERT_FALSE(fastDfa.Check("(a)"));
 }
 
 TEST(CHARACTER_GROUPS, CUSTOM_GROUP3) {
@@ -284,6 +373,8 @@ TEST(CHARACTER_GROUPS, CUSTOM_GROUP3) {
   ASSERT_TRUE(nfa.Check("[]"));
   auto dfa = CreateDFAFromNFA(nfa);
   ASSERT_TRUE(dfa.Check("[]"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_TRUE(fastDfa.Check("[]"));
 }
 
 TEST(CHARACTER_GROUPS, CUSTOM_GROUP4) {
@@ -299,6 +390,11 @@ TEST(CHARACTER_GROUPS, CUSTOM_GROUP4) {
     ASSERT_TRUE(dfa.Check({c}));
   }
   ASSERT_FALSE(dfa.Check("a"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  for (char c = '0'; c < '9'; ++c) {
+    ASSERT_TRUE(fastDfa.Check({c}));
+  }
+  ASSERT_FALSE(fastDfa.Check("a"));
 }
 
 TEST(CHARACTER_GROUPS, RANGE1) {
@@ -314,6 +410,11 @@ TEST(CHARACTER_GROUPS, RANGE1) {
     ASSERT_TRUE(dfa.Check({c}));
   }
   ASSERT_FALSE(dfa.Check({'f'}));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  for (char c = 'a'; c <= 'e'; ++c) {
+    ASSERT_TRUE(fastDfa.Check({c}));
+  }
+  ASSERT_FALSE(fastDfa.Check({'f'}));
 }
 
 TEST(CHARACTER_GROUPS, RANGE2) {
@@ -329,6 +430,11 @@ TEST(CHARACTER_GROUPS, RANGE2) {
     ASSERT_TRUE(dfa.Check({c}));
   }
   ASSERT_FALSE(dfa.Check({'a'}));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  for (char c = '0'; c <= '9'; ++c) {
+    ASSERT_TRUE(fastDfa.Check({c}));
+  }
+  ASSERT_FALSE(fastDfa.Check({'a'}));
 }
 
 TEST(CHARACTER_GROUPS, RANGE3) {
@@ -344,6 +450,11 @@ TEST(CHARACTER_GROUPS, RANGE3) {
     ASSERT_TRUE(dfa.Check({c}));
   }
   ASSERT_FALSE(dfa.Check({']'}));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  for (char c = 'A'; c <= '\\'; ++c) {
+    ASSERT_TRUE(fastDfa.Check({c}));
+  }
+  ASSERT_FALSE(fastDfa.Check({']'}));
 }
 
 TEST(NUM_RANGES, TEST1) {
@@ -359,6 +470,11 @@ TEST(NUM_RANGES, TEST1) {
   ASSERT_TRUE(dfa.Check("aa"));
   ASSERT_TRUE(dfa.Check("aaa"));
   ASSERT_FALSE(dfa.Check("aaaa"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_FALSE(fastDfa.Check("a"));
+  ASSERT_TRUE(fastDfa.Check("aa"));
+  ASSERT_TRUE(fastDfa.Check("aaa"));
+  ASSERT_FALSE(fastDfa.Check("aaaa"));
 }
 
 TEST(NUM_RANGES, TEST2) {
@@ -380,6 +496,14 @@ TEST(NUM_RANGES, TEST2) {
   ASSERT_TRUE(dfa.Check("bb"));
   ASSERT_TRUE(dfa.Check("aba"));
   ASSERT_FALSE(dfa.Check("aaaa"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  ASSERT_FALSE(fastDfa.Check("a"));
+  ASSERT_TRUE(fastDfa.Check("aa"));
+  ASSERT_TRUE(fastDfa.Check("ab"));
+  ASSERT_TRUE(fastDfa.Check("ba"));
+  ASSERT_TRUE(fastDfa.Check("bb"));
+  ASSERT_TRUE(fastDfa.Check("aba"));
+  ASSERT_FALSE(fastDfa.Check("aaaa"));
 }
 
 TEST(NUM_RANGES, TEST3) {
@@ -403,6 +527,15 @@ TEST(NUM_RANGES, TEST3) {
     ASSERT_TRUE(dfa.Check(curTest));
   }
   ASSERT_FALSE(dfa.Check("aaaa"));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  for (int i = 1; i <= 3; ++i) {
+    std::string curTest;
+    for (int j = 0; j < i; ++j) {
+      curTest += 'a';
+    }
+    ASSERT_TRUE(fastDfa.Check(curTest));
+  }
+  ASSERT_FALSE(fastDfa.Check("aaaa"));
 }
 
 TEST(TIMES, TEST1) {
@@ -410,6 +543,7 @@ TEST(TIMES, TEST1) {
   auto result = CreateASTFromStream(&in);
   auto nfa = CreateNFAFromAST(result.get());
   auto dfa = CreateDFAFromNFA(nfa);
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
   Benchmark(
       [&nfa]() {
         std::string test;
@@ -434,6 +568,18 @@ TEST(TIMES, TEST1) {
         dfa.Check(test);
       },
       "DFA with regex (a+|b*)");
+  Benchmark(
+      [&fastDfa]() {
+        std::string test;
+        for (size_t i = 0; i < 100000; ++i) {
+          test += "a";
+        }
+        for (size_t i = 0; i < 100000; ++i) {
+          test += "b";
+        }
+        fastDfa.Check(test);
+      },
+      "Fast DFA with regex (a+|b*)");
 }
 
 TEST(TIMES, TEST2) {
@@ -441,6 +587,7 @@ TEST(TIMES, TEST2) {
   auto result = CreateASTFromStream(&in);
   auto nfa = CreateNFAFromAST(result.get());
   auto dfa = CreateDFAFromNFA(nfa);
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
   Benchmark(
       [&nfa]() {
         std::string test;
@@ -465,6 +612,18 @@ TEST(TIMES, TEST2) {
         dfa.Check(test);
       },
       "DFA with regex (a+|b*)");
+  Benchmark(
+      [&fastDfa]() {
+        std::string test;
+        for (size_t i = 0; i < 100000; ++i) {
+          test += "a";
+        }
+        for (size_t i = 0; i < 100000; ++i) {
+          test += "b";
+        }
+        fastDfa.Check(test);
+      },
+      "Fast DFA with regex (a+|b*)");
 }
 
 TEST(TIMES, TEST3) {
@@ -472,6 +631,7 @@ TEST(TIMES, TEST3) {
   auto result = CreateASTFromStream(&in);
   auto nfa = CreateNFAFromAST(result.get());
   auto dfa = CreateDFAFromNFA(nfa);
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
   Benchmark(
       [&nfa]() {
         std::string test;
@@ -491,9 +651,51 @@ TEST(TIMES, TEST3) {
       },
       "DFA with regex (a+|b*)");
   Benchmark(
+      [&fastDfa]() {
+        std::string test;
+        for (size_t i = 0; i < 200000; ++i) {
+          test += "a";
+        }
+        fastDfa.Check(test);
+      },
+      "Fast DFA with regex (a+|b*)");
+  Benchmark(
       []() {
         std::string test;
         for (size_t i = 0; i < 200000; ++i) {
+          test += "a";
+        }
+      },
+      "Simple loop");
+}
+
+TEST(TIMES, TEST4) {
+  std::stringstream in("((((((((a*)+)+)*)+)*)*)+)+");
+  auto result = CreateASTFromStream(&in);
+  auto dfa = CreateDFAFromNFA(CreateNFAFromAST(result.get()));
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  Benchmark(
+      [&dfa]() {
+        std::string test;
+        for (size_t i = 0; i < 2000000; ++i) {
+          test += "a";
+        }
+        dfa.Check(test);
+      },
+      "DFA with regex (a+|b*)");
+  Benchmark(
+      [&fastDfa]() {
+        std::string test;
+        for (size_t i = 0; i < 2000000; ++i) {
+          test += "a";
+        }
+        fastDfa.Check(test);
+      },
+      "Fast DFA with regex (a+|b*)");
+  Benchmark(
+      []() {
+        std::string test;
+        for (size_t i = 0; i < 2000000; ++i) {
           test += "a";
         }
       },
