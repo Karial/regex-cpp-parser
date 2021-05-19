@@ -18,7 +18,7 @@ int main() {
   auto dfa = CreateDFAFromStream(&dfa_in);
   std::stringstream nfa_in("a*b+");
   auto nfa = CreateNFAFromStream(&nfa_in);
-  auto fastDfa = CreateFastFiniteAutomata(dfa);
-  std::cout << fastDfa.Check("aaab") << '\n';
+  std::stringstream fastDfa_in("a*b+");
+  auto fastDfa = CreateFastFiniteAutomataFromStream(&fastDfa_in);
   return 0;
 }
