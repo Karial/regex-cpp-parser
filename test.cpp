@@ -571,16 +571,16 @@ TEST(CHECK_TIMES, CHECK1) {
     test += "b";
   }
 
-//  Benchmark(
-//      [&nfa, &test]() {
-//        nfa.Check(test);
-//      },
-//      "NFA with regex (a+|b*)");
-//  Benchmark(
-//      [&dfa, &test]() {
-//        dfa.Check(test);
-//      },
-//      "DFA with regex (a+|b*)");
+  Benchmark(
+      [&nfa, &test]() {
+        nfa.Check(test);
+      },
+      "NFA with regex (a+|b*)");
+  Benchmark(
+      [&dfa, &test]() {
+        dfa.Check(test);
+      },
+      "DFA with regex (a+|b*)");
   Benchmark(
       [&fastDfa, &test]() {
         fastDfa.Check(test);
@@ -602,16 +602,16 @@ TEST(CHECK_TIMES, CHECK2) {
     test += "b";
   }
 
-//  Benchmark(
-//      [&nfa, &test]() {
-//        nfa.Check(test);
-//      },
-//      "NFA with regex (a+|b*)");
-//  Benchmark(
-//      [&dfa, &test]() {
-//        dfa.Check(test);
-//      },
-//      "DFA with regex (a+|b*)");
+  Benchmark(
+      [&nfa, &test]() {
+        nfa.Check(test);
+      },
+      "NFA with regex (a+|b*)");
+  Benchmark(
+      [&dfa, &test]() {
+        dfa.Check(test);
+      },
+      "DFA with regex (a+|b*)");
   Benchmark(
       [&fastDfa, &test]() {
         fastDfa.Check(test);
@@ -630,16 +630,16 @@ TEST(CHECK_TIMES, CHECK3) {
     test += "a";
   }
 
-//  Benchmark(
-//      [&nfa, &test]() {
-//        nfa.Check(test);
-//      },
-//      "NFA with regex (a+|b*)");
-//  Benchmark(
-//      [&dfa, &test]() {
-//        dfa.Check(test);
-//      },
-//      "DFA with regex (a+|b*)");
+  Benchmark(
+      [&nfa, &test]() {
+        nfa.Check(test);
+      },
+      "NFA with regex (a+|b*)");
+  Benchmark(
+      [&dfa, &test]() {
+        dfa.Check(test);
+      },
+      "DFA with regex (a+|b*)");
   Benchmark(
       [&fastDfa, &test]() {
         fastDfa.Check(test);
@@ -665,11 +665,11 @@ TEST(CHECK_TIMES, CHECK4) {
     test += "a";
   }
 
-//  Benchmark(
-//      [&dfa, &test]() {
-//        dfa.Check(test);
-//      },
-//      "DFA with regex (a+|b*)");
+  Benchmark(
+      [&dfa, &test]() {
+        dfa.Check(test);
+      },
+      "DFA with regex (a+|b*)");
   Benchmark(
       [&fastDfa, &test]() {
         fastDfa.Check(test);
