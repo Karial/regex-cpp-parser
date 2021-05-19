@@ -27,7 +27,7 @@ void Benchmark(const Function &function, const std::string &functionName) {
   function();
   auto stop = high_resolution_clock::now();
   std::cout << "Execution time of " + functionName + " "
-            << duration_cast<milliseconds>(stop - start).count() << " mcs\n";
+            << duration_cast<milliseconds>(stop - start).count() << " ms\n";
 }
 
 std::vector<char> CharRange(char first, char last) {

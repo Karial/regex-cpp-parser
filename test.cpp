@@ -1,7 +1,9 @@
+//#define SAVE_MEMORY
 #include "finite_automata.hpp"
 #include "fast_finite_automata.hpp"
 #include <fstream>
 #include <gtest/gtest.h>
+#include <regex>
 
 TEST(BASIC_FUNCTIONALITY_TESTS, TEST1) {
   std::stringstream in("a*b+");
@@ -457,6 +459,23 @@ TEST(CHARACTER_GROUPS, RANGE3) {
   ASSERT_FALSE(fastDfa.Check({']'}));
 }
 
+TEST(CHARACTER_GROUPS, NUMBERS) {
+  std::stringstream in("-?\\d+(.\\d+)?");
+  auto ast = CreateASTFromStream(&in);
+  auto nfa = CreateNFAFromAST(ast.get());
+  for (double i = -10.0; i <= 10.0; i += 0.1) {
+    ASSERT_TRUE(nfa.Check(std::to_string(i)));
+  }
+  auto dfa = CreateDFAFromNFA(nfa);
+  for (double i = -10.0; i <= 10.0; i += 0.1) {
+    ASSERT_TRUE(dfa.Check(std::to_string(i)));
+  }
+  auto fastDfa = CreateFastFiniteAutomata(dfa);
+  for (double i = -10.0; i <= 10.0; i += 0.1) {
+    ASSERT_TRUE(fastDfa.Check(std::to_string(i)));
+  }
+}
+
 TEST(NUM_RANGES, TEST1) {
   std::stringstream in("a{2,3}");
   auto ast = CreateASTFromStream(&in);
@@ -538,124 +557,91 @@ TEST(NUM_RANGES, TEST3) {
   ASSERT_FALSE(fastDfa.Check("aaaa"));
 }
 
-TEST(TIMES, TEST1) {
+TEST(CHECK_TIMES, CHECK1) {
   std::stringstream in("(a+|b*)");
   auto result = CreateASTFromStream(&in);
   auto nfa = CreateNFAFromAST(result.get());
   auto dfa = CreateDFAFromNFA(nfa);
   auto fastDfa = CreateFastFiniteAutomata(dfa);
+  std::string test;
+  for (size_t i = 0; i < 100000; ++i) {
+    test += "a";
+  }
+  for (size_t i = 0; i < 100000; ++i) {
+    test += "b";
+  }
+
+//  Benchmark(
+//      [&nfa, &test]() {
+//        nfa.Check(test);
+//      },
+//      "NFA with regex (a+|b*)");
+//  Benchmark(
+//      [&dfa, &test]() {
+//        dfa.Check(test);
+//      },
+//      "DFA with regex (a+|b*)");
   Benchmark(
-      [&nfa]() {
-        std::string test;
-        for (size_t i = 0; i < 100000; ++i) {
-          test += "a";
-        }
-        for (size_t i = 0; i < 100000; ++i) {
-          test += "b";
-        }
-        nfa.Check(test);
-      },
-      "NFA with regex (a+|b*)");
-  Benchmark(
-      [&dfa]() {
-        std::string test;
-        for (size_t i = 0; i < 100000; ++i) {
-          test += "a";
-        }
-        for (size_t i = 0; i < 100000; ++i) {
-          test += "b";
-        }
-        dfa.Check(test);
-      },
-      "DFA with regex (a+|b*)");
-  Benchmark(
-      [&fastDfa]() {
-        std::string test;
-        for (size_t i = 0; i < 100000; ++i) {
-          test += "a";
-        }
-        for (size_t i = 0; i < 100000; ++i) {
-          test += "b";
-        }
+      [&fastDfa, &test]() {
         fastDfa.Check(test);
       },
       "Fast DFA with regex (a+|b*)");
 }
 
-TEST(TIMES, TEST2) {
+TEST(CHECK_TIMES, CHECK2) {
   std::stringstream in("((a*|b*|c*)d+e+)|(x*y+z*)");
   auto result = CreateASTFromStream(&in);
   auto nfa = CreateNFAFromAST(result.get());
   auto dfa = CreateDFAFromNFA(nfa);
   auto fastDfa = CreateFastFiniteAutomata(dfa);
+  std::string test;
+  for (size_t i = 0; i < 100000; ++i) {
+    test += "a";
+  }
+  for (size_t i = 0; i < 100000; ++i) {
+    test += "b";
+  }
+
+//  Benchmark(
+//      [&nfa, &test]() {
+//        nfa.Check(test);
+//      },
+//      "NFA with regex (a+|b*)");
+//  Benchmark(
+//      [&dfa, &test]() {
+//        dfa.Check(test);
+//      },
+//      "DFA with regex (a+|b*)");
   Benchmark(
-      [&nfa]() {
-        std::string test;
-        for (size_t i = 0; i < 100000; ++i) {
-          test += "a";
-        }
-        for (size_t i = 0; i < 100000; ++i) {
-          test += "b";
-        }
-        nfa.Check(test);
-      },
-      "NFA with regex (a+|b*)");
-  Benchmark(
-      [&dfa]() {
-        std::string test;
-        for (size_t i = 0; i < 100000; ++i) {
-          test += "a";
-        }
-        for (size_t i = 0; i < 100000; ++i) {
-          test += "b";
-        }
-        dfa.Check(test);
-      },
-      "DFA with regex (a+|b*)");
-  Benchmark(
-      [&fastDfa]() {
-        std::string test;
-        for (size_t i = 0; i < 100000; ++i) {
-          test += "a";
-        }
-        for (size_t i = 0; i < 100000; ++i) {
-          test += "b";
-        }
+      [&fastDfa, &test]() {
         fastDfa.Check(test);
       },
       "Fast DFA with regex (a+|b*)");
 }
 
-TEST(TIMES, TEST3) {
+TEST(CHECK_TIMES, CHECK3) {
   std::stringstream in("((((((((a*)+)+)*)+)*)*)+)+");
   auto result = CreateASTFromStream(&in);
   auto nfa = CreateNFAFromAST(result.get());
   auto dfa = CreateDFAFromNFA(nfa);
   auto fastDfa = CreateFastFiniteAutomata(dfa);
+  std::string test;
+  for (size_t i = 0; i < 200000; ++i) {
+    test += "a";
+  }
+
+//  Benchmark(
+//      [&nfa, &test]() {
+//        nfa.Check(test);
+//      },
+//      "NFA with regex (a+|b*)");
+//  Benchmark(
+//      [&dfa, &test]() {
+//        dfa.Check(test);
+//      },
+//      "DFA with regex (a+|b*)");
   Benchmark(
-      [&nfa]() {
-        std::string test;
-        for (size_t i = 0; i < 200000; ++i) {
-          test += "a";
-        }
-        nfa.Check(test);
-      },
-      "NFA with regex (a+|b*)");
-  Benchmark(
-      [&dfa]() {
-        std::string test;
-        for (size_t i = 0; i < 200000; ++i) {
-          test += "a";
-        }
-        dfa.Check(test);
-      },
-      "DFA with regex (a+|b*)");
-  Benchmark(
-      [&fastDfa]() {
-        std::string test;
-        for (size_t i = 0; i < 200000; ++i) {
-          test += "a";
-        }
+      [&fastDfa, &test]() {
         fastDfa.Check(test);
       },
       "Fast DFA with regex (a+|b*)");
@@ -669,35 +655,221 @@ TEST(TIMES, TEST3) {
       "Simple loop");
 }
 
-TEST(TIMES, TEST4) {
+TEST(CHECK_TIMES, CHECK4) {
   std::stringstream in("((((((((a*)+)+)*)+)*)*)+)+");
   auto result = CreateASTFromStream(&in);
   auto dfa = CreateDFAFromNFA(CreateNFAFromAST(result.get()));
   auto fastDfa = CreateFastFiniteAutomata(dfa);
+  std::string test;
+  for (size_t i = 0; i < 2000000; ++i) {
+    test += "a";
+  }
+
+//  Benchmark(
+//      [&dfa, &test]() {
+//        dfa.Check(test);
+//      },
+//      "DFA with regex (a+|b*)");
   Benchmark(
-      [&dfa]() {
-        std::string test;
-        for (size_t i = 0; i < 2000000; ++i) {
-          test += "a";
-        }
-        dfa.Check(test);
-      },
-      "DFA with regex (a+|b*)");
-  Benchmark(
-      [&fastDfa]() {
-        std::string test;
-        for (size_t i = 0; i < 2000000; ++i) {
-          test += "a";
-        }
+      [&fastDfa, &test]() {
         fastDfa.Check(test);
       },
       "Fast DFA with regex (a+|b*)");
   Benchmark(
       []() {
         std::string test;
-        for (size_t i = 0; i < 2000000; ++i) {
-          test += "a";
+        for (size_t i = 0; i < 1000000; ++i) {
         }
       },
       "Simple loop");
+}
+
+TEST(CHECK_TIMES, FastDFA) {
+  std::string testString1, testString2, testString3, testString4;
+  for (size_t i = 0; i < 1000000; ++i) {
+    testString1 += 'a';
+  }
+  testString1 += '#';
+
+  for (size_t i = 0; i < 100000; ++i) {
+    testString2 += "0123456789";
+  }
+  testString2 += '#';
+
+  for (size_t i = 0; i < 100000; ++i) {
+    testString3 += "acbdef1234";
+  }
+  testString3 += '#';
+
+  for (size_t i = 0; i < 100000; ++i) {
+    testString4 += "-12345.213";
+  }
+
+  Benchmark(
+      [&testString1]() {
+        std::stringstream in("a*");
+        auto fastDfa = CreateFastFiniteAutomataFromStream(&in);
+        fastDfa.Check(testString1);
+      },
+      "Fast DFA with regex a*");
+  Benchmark(
+      [&testString2]() {
+        std::stringstream in("\\d+");
+        auto fastDfa = CreateFastFiniteAutomataFromStream(&in);
+        fastDfa.Check(testString2);
+      },
+      "Fast DFA with regex \\d+");
+  Benchmark(
+      [&testString3]() {
+        std::stringstream in("[abcdef1-4]+");
+        auto fastDfa = CreateFastFiniteAutomataFromStream(&in);
+        fastDfa.Check(testString3);
+      },
+      "Fast DFA with regex [abcdef1-4]+");
+  Benchmark(
+      [&testString4]() {
+        std::stringstream in("(-?\\d+(.\\d+)?)+");
+        auto fastDfa = CreateFastFiniteAutomataFromStream(&in);
+        fastDfa.Check(testString4);
+      },
+      "Fast DFA with regex (-?\\d+(.\\d+)?)+");
+}
+
+TEST(CHECK_TIMES, StdRegexp) {
+  std::string testString1, testString2, testString3, testString4;
+  for (size_t i = 0; i < 1000000; ++i) {
+    testString1 += 'a';
+  }
+  testString1 += '#';
+
+  for (size_t i = 0; i < 100000; ++i) {
+    testString2 += "0123456789";
+  }
+  testString2 += '#';
+
+  for (size_t i = 0; i < 100000; ++i) {
+    testString3 += "acbdef1234";
+  }
+  testString3 += '#';
+
+  for (size_t i = 0; i < 100000; ++i) {
+    testString4 += "-12345.213";
+  }
+
+  Benchmark(
+      [&testString1]() {
+        std::regex regex("a*");
+        std::regex_match(testString1, regex);
+      },
+      "Std regex with regex a*");
+  Benchmark(
+      [&testString2]() {
+        std::regex regex("\\d+");
+        std::regex_match(testString2, regex);
+      },
+      "Std regex with regex \\d+");
+  Benchmark(
+      [&testString3]() {
+        std::regex regex("[abcdef1-4]+");
+        std::regex_match(testString3, regex);
+      },
+      "Std regex with regex [abcdef1-4]+");
+  Benchmark(
+      [&testString4]() {
+        std::regex regex("(-?\\d+(.\\d+)?)+");
+        std::regex_match(testString4, regex);
+      },
+      "Std regex with regex (-?\\d+(.\\d+)?)+");
+}
+
+TEST(BUILD_TIMES, BUILD1) {
+  const std::string regex = "(a+|b*)";
+
+  Benchmark(
+      [&regex]() {
+        std::stringstream in(regex);
+        CreateNFAFromStream(&in);
+      },
+      "NFA from regex " + regex);
+  Benchmark(
+      [&regex]() {
+        std::stringstream in(regex);
+        CreateDFAFromStream(&in);
+      },
+      "DFA from regex " + regex);
+  Benchmark(
+      [&regex]() {
+        std::stringstream in(regex);
+        CreateFastFiniteAutomataFromStream(&in);
+      },
+      "Fast DFA from regex " + regex);
+}
+
+TEST(BUILD_TIMES, BUILD2) {
+  const std::string regex = "[abcde3-7\\\\]+xy*z+";
+
+  Benchmark(
+      [&regex]() {
+        std::stringstream in(regex);
+        CreateNFAFromStream(&in);
+      },
+      "NFA from regex " + regex);
+  Benchmark(
+      [&regex]() {
+        std::stringstream in(regex);
+        CreateDFAFromStream(&in);
+      },
+      "DFA from regex " + regex);
+  Benchmark(
+      [&regex]() {
+        std::stringstream in(regex);
+        CreateFastFiniteAutomataFromStream(&in);
+      },
+      "Fast DFA from regex " + regex);
+}
+
+TEST(BUILD_TIMES, BUILD3) {
+  const std::string regex = "(-?\\d+(.\\d+)?)\\+(-?\\d+(.\\d+)?)=(-?\\d+(.\\d+)?)";
+
+  Benchmark(
+      [&regex]() {
+        std::stringstream in(regex);
+        CreateNFAFromStream(&in);
+      },
+      "NFA from regex " + regex);
+  Benchmark(
+      [&regex]() {
+        std::stringstream in(regex);
+        CreateDFAFromStream(&in);
+      },
+      "DFA from regex " + regex);
+  Benchmark(
+      [&regex]() {
+        std::stringstream in(regex);
+        CreateFastFiniteAutomataFromStream(&in);
+      },
+      "Fast DFA from regex " + regex);
+}
+
+TEST(BUILD_TIMES, BUILD4) {
+  const std::string regex = "(-?\\d+(.\\d+)?){,10}";
+
+  Benchmark(
+      [&regex]() {
+        std::stringstream in(regex);
+        CreateNFAFromStream(&in);
+      },
+      "NFA from regex " + regex);
+  Benchmark(
+      [&regex]() {
+        std::stringstream in(regex);
+        CreateDFAFromStream(&in);
+      },
+      "DFA from regex " + regex);
+  Benchmark(
+      [&regex]() {
+        std::stringstream in(regex);
+        CreateFastFiniteAutomataFromStream(&in);
+      },
+      "Fast DFA from regex " + regex);
 }
